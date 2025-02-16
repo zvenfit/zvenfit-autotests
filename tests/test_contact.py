@@ -6,14 +6,14 @@ from pages.contact_page import ContactPage
 @pytest.fixture
 def mock_api():
     with requests_mock.Mocker() as m:
-        m.post("https://zvenfit.ru/", json={"success": True})
+        m.post("https://zvenfit.ru/api/v2/form/submit", json={"success": True})
         yield m
 
 
 @pytest.fixture
 def setup(page, mock_api):
     contact_page = ContactPage(page)
-    contact_page.navigate("https://zvenfit.ru/")
+    contact_page.navigate("https://zvenfit.ru/api/v2/form/submit")
     return contact_page
 
 def test_contact_form_submission(setup):
