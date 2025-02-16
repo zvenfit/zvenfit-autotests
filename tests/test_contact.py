@@ -3,18 +3,26 @@ import time
 import pytest
 from pages.contact_page import ContactPage
 
-@pytest.fixture
-def mock_api():
-    with requests_mock.Mocker() as m:
-        m.post("https://zvenfit.ru/api/v2/form/submit", json={"success": True})
-        yield m
-
 
 @pytest.fixture
-def setup(page, mock_api):
+def setup(page):
+
+    def handle_route(route, request):
+        if request.method == "POST":
+            route.fulfill(
+                status=200,
+                content_type="application/json",
+                body='{"success": true, "message": "Форма успешно отправлена!"}'
+            )
+        else:
+            route.continue_()
+
+    page.route("https://zvenfit.ru/api/v2/form/submit", handle_route)
+
     contact_page = ContactPage(page)
-    contact_page.navigate("https://zvenfit.ru/api/v2/form/submit")
-    return contact_page
+    contact_page.navigate("https://zvenfit.ru/")
+    yield contact_page
+
 
 def test_contact_form_submission(setup):
     setup.fill_contact_form("Тест", "1111111111")
