@@ -2,13 +2,13 @@
 
 Статус: **пересмотрено после аудита `zvenfit-frontend`**
 
-Дата: 2026-08-13
+Дата: 2026-08-14
 
 Репозитории: `zvenfit-frontend` и локальный `zvenfit-autotests`
 
 ## Статус реализации на 2026-08-14
 
-Завершён первый кодовый milestone, cloud-ресурсы не создавались:
+Завершены два кодовых milestone, cloud-ресурсы не создавались:
 
 - локальный Playwright baseline: 167 passed, 45 ожидаемо skipped;
 - suite использует выделенный `127.0.0.1:43987` и не подключается к случайному
@@ -22,11 +22,18 @@
 - добавлены тесты на staging/production isolation и сохранение порядка
   integration test → YDB migration → Function version;
 - frontend lint, function tests, deployment tests, monitoring tests и
-  production-like static build проходят локально.
+  production-like static build проходят локально;
+- в schedule-функции реализована явная граница `fitbase | fixture`;
+- production wrapper закрепляет `fitbase`, staging wrapper — динамический
+  синтетический `fixture` без `FITBASE_API_TOKEN`;
+- fixture запрещён в production deployment validator, deploy-скриптом до
+  запуска `yc` и самой функцией во время выполнения;
+- статичный JSON с абсолютными датами удалён, локальный mock и staging используют
+  один генератор сценариев;
+- HTTP smoke диапазона `2030-12-31 → 2031-01-01` подтвердил корректный переход
+  через границу года и прежний публичный контракт.
 
-Следующий milestone — динамический fixture provider расписания. После него можно
-выполнять административный bootstrap staging, не передавая staging-функции
-production Fitbase token.
+Следующий milestone — административный bootstrap изолированных staging-ресурсов.
 
 ## 1. Итоговое решение
 
@@ -186,16 +193,10 @@ Staging identity не получает ролей на production folder и на
 
 ### Schedule и Fitbase
 
-Schedule function выполняет read-only запросы, но режим staging зависит от
-возможностей Fitbase:
-
-1. Предпочтительно — отдельный sandbox/club и отдельный read-only token.
-2. Если sandbox отсутствует — отдельный read-only token к production Fitbase с
-   доказанным запретом изменяющих методов.
-3. Если отдельный token невозможен — staging schedule работает на fixture, а
-   production read-only smoke отдельно проверяет реальный Fitbase.
-
-Выбирать вариант до подтверждения возможностей Fitbase нельзя.
+Для первого staging выбран безопасный режим: staging schedule работает на
+динамическом fixture без Fitbase credentials, а production read-only smoke
+отдельно проверяет реальный Fitbase. Если позже появится официальный sandbox,
+его можно добавить третьим provider отдельным изменением.
 
 ### Как поддерживаются schedule fixtures
 
@@ -204,14 +205,14 @@ Fixture не должна быть копией актуального клуб�
 production-ответы. Fixture хранит **синтетические продуктовые сценарии**, а
 актуальность интеграции проверяется отдельно.
 
-Текущий `scripts/fixtures/schedule.mock.json` содержит абсолютные даты и поэтому
-протухает как календарь. Его следует заменить генератором:
+Старый `scripts/fixtures/schedule.mock.json` с абсолютными датами удалён.
+Единый генератор находится в frontend-репозитории:
 
 ```text
-scripts/fixtures/schedule/
-├── scenarios.json
-├── generate-schedule.cjs
-└── schedule-contract.schema.json
+functions/fitbase-schedule/src/providers/
+├── fitbase-provider.ts
+├── fixture-provider.ts
+└── index.ts
 ```
 
 В сценариях хранятся не даты, а смещения относительно запрошенного `from`:
@@ -233,7 +234,7 @@ scripts/fixtures/schedule/
 диапазона. Поэтому staging всегда показывает правдоподобную текущую неделю, но
 результат остаётся детерминированным.
 
-Обязательный набор сценариев:
+Генератор покрывает сценарии:
 
 - обычное групповое занятие;
 - отменённое занятие;
@@ -241,9 +242,11 @@ scripts/fixtures/schedule/
 - закрытая регистрация;
 - детское занятие;
 - пересекающиеся занятия;
-- занятие без тренера, фото или описания;
-- пустая неделя;
-- ошибки `400`, `502`, timeout и malformed payload для негативных UI-тестов.
+- занятие без тренера, фото и описания.
+
+Пустая неделя, `400`, `502`, timeout и malformed payload остаются локальными
+Playwright interception-сценариями. Публичный staging endpoint не принимает
+переключатель сценария и не превращается в управляемый извне fault injector.
 
 Поддержка делится на два независимых процесса:
 
@@ -258,18 +261,17 @@ Production contract check запускается после deploy и, при н
 ежедневно в `zvenfit-frontend`. Он обнаружит изменение формата Fitbase или
 mapper раньше, чем понадобится вручную обновлять fixture.
 
-Для реализации в schedule function вводится provider boundary:
+В schedule function реализована provider boundary:
 
 ```text
 ScheduleProvider
 ├── FitbaseScheduleProvider     production
-└── FixtureScheduleProvider     local/staging fallback
+└── FixtureScheduleProvider     local/staging
 ```
 
 Режим задаётся явным `SCHEDULE_PROVIDER=fitbase|fixture`. Production deploy
-обязан fail-closed завершаться ошибкой, если выбран `fixture`; staging может
-использовать его явно. Нельзя молча подменять ошибку Fitbase успешной fixture в
-production.
+fail-closed завершается ошибкой, если выбран `fixture`; staging использует его
+явно. Ошибка Fitbase никогда не подменяется успешной fixture в production.
 
 Синтетические имена, изображения и описания создаются вручную. Автоматически
 записывать production response в fixture нельзя. Если для расследования contract
@@ -625,6 +627,20 @@ runtime config отдельно от immutable assets. До такого изм�
 - сохранить текущие migration и IAM invariants;
 - production deploy пока работает прежним способом.
 
+Статус: завершено в `refactor/environment-aware-deploy`.
+
+### Этап 1.5 — безопасное staging-расписание
+
+Ветка: `feature/schedule-fixture-provider`
+
+- provider boundary `fitbase | fixture`;
+- динамические даты и синтетические продуктовые сценарии;
+- один generator для локального mock и staging Cloud Function;
+- production guard в config validator, deploy и runtime;
+- contract/unit/deployment/monitoring tests.
+
+Статус: завершено локально, cloud deploy не выполнялся.
+
 ### Этап 2 — bootstrap полноценного staging
 
 Ветка: `feature/staging-environment`
@@ -688,7 +704,7 @@ Bootstrap выполняется идемпотентным admin-скрипто
 | Lead POST | intercepted | реальный staging | side-effect-free | запрещён |
 | YDB save | mock | реальная staging YDB | запрещён | запрещён |
 | Telegram retry | unit/mock | test bot/chat | запрещён | только metrics |
-| Schedule | fixture | выбранный staging режим | — | real read-only GET |
+| Schedule | dynamic fixture | dynamic fixture | — | real read-only GET |
 | CORS | config/mock | real OPTIONS | отдельно | real OPTIONS |
 | Security negatives | mock/unit | staging | HMAC negatives | — |
 
@@ -707,15 +723,14 @@ Bootstrap выполняется идемпотентным admin-скрипто
 
 Нужны факты, а не архитектурные догадки:
 
-1. Какой домен используем для staging и нужен ли ему access control?
-2. Есть ли у Fitbase sandbox или отдельный read-only token?
-3. Создаём отдельного Telegram bot или достаточно отдельного test chat?
-4. Можно ли включить versioning текущего production bucket и как восстанавливать
+1. Можно ли выпустить DNS/TLS для выбранного `staging.zvenfit.ru` и нужен ли ему
+   access control?
+2. Создаём отдельного Telegram bot или достаточно отдельного test chat?
+3. Можно ли включить versioning текущего production bucket и как восстанавливать
    согласованный набор файлов одной версии?
-5. Есть ли в Yandex Cloud аккаунте возможность настроить GitHub OIDC без
+4. Есть ли в Yandex Cloud аккаунте возможность настроить GitHub OIDC без
    расширения production прав?
-6. Нужен ли staging deploy на каждую merge revision или только вручную перед
-   release?
+5. Какой retention/cleanup устанавливаем для синтетических staging-лидов?
 
 Эти ответы влияют на конкретные скрипты, но не меняют базовое решение об
 изолированном staging.
