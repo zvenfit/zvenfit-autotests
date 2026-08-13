@@ -605,7 +605,65 @@ short-lived identity желателен, но должен быть отдель
 runtime config отдельно от immutable assets. До такого изменения критерий —
 одинаковый commit SHA и checksums для function source, а не один frontend tarball.
 
-## 13. Порядок реализации
+## 13. Порядок дальнейшей реализации
+
+### Release 1 — выпустить уже готовые изменения
+
+Текущий frontend-кандидат состоит из трёх последовательных коммитов:
+
+```text
+a392a0f refactor: add environment-aware deployment
+bec389a feat: add staging schedule fixture provider
+20a8444 fix: preserve production schedule alerts
+```
+
+Выпускать их следует **одним PR** из `feature/schedule-fixture-provider`, потому
+что ветка уже содержит оба коммита. Так `push` в `main` запустит один production
+deploy, а не два промежуточных релиза.
+
+Изменения production-совместимы:
+
+- production resource names, origins и URLs не меняются;
+- production schedule явно использует `SCHEDULE_PROVIDER=fitbase`;
+- `FITBASE_API_TOKEN`, домен и club ID передаются прежнему Fitbase adapter;
+- fixture запрещён validator, deploy-скриптом и runtime-кодом;
+- staging workflow существует отдельно и запускается только вручную;
+- staging resources не требуются для production deploy;
+- прежние production monitoring events сохранены для совместимости с уже
+  созданными вручную log metrics.
+
+Перед merge обязательны:
+
+1. `git fetch origin` и подтверждение, что ветка не отстаёт от `origin/main`;
+2. зелёные lint, обе Cloud Functions, deployment/monitoring tests и
+   production-like build;
+3. зелёный локальный Playwright baseline;
+4. проверка, что GitHub Environment `production` по-прежнему содержит текущие
+   secrets/variables, включая `FITBASE_API_TOKEN` и
+   `YC_LEAD_SERVICE_ACCOUNT_ID`;
+5. фиксация текущих production Function version IDs и состояния frontend для
+   ручного rollback;
+6. review итогового PR diff без одновременных продуктовых изменений.
+
+Порядок самого релиза:
+
+1. merge одного PR в согласованное малонагруженное окно;
+2. дождаться `validate-config` и `quality-checks`;
+3. подтвердить GitHub Environment `production`;
+4. проследить deploy Lead Function, Schedule Function и сайта;
+5. дождаться встроенного read-only smoke — он делает только `GET` и `OPTIONS`;
+6. отдельно проверить production schedule `GET`, не отправляя lead form;
+7. наблюдать ошибки функций и schedule alert минимум 10–15 минут.
+
+Stop conditions: несовпадение production resource map, запрос нового секрета,
+ошибка любой функции, отсутствие schedule JSON или рост ERROR-событий. При них
+сайт дальше не публикуется; если часть jobs уже завершилась, возвращаются
+записанные Function versions либо делается revert PR с повторным deploy.
+
+Статус на 2026-08-14: ветка синхронизирована с `origin/main`, полный локальный
+quality gate и Playwright прошли. Cloud/GitHub run ещё не выполнялся, поэтому
+окончательный release verdict — **готово к PR и контролируемому production
+deploy**, а не «можно выкатывать без наблюдения».
 
 ### Этап 0 — зафиксировать реальные параметры
 
@@ -654,6 +712,24 @@ runtime config отдельно от immutable assets. До такого изм�
 Bootstrap выполняется идемпотентным admin-скриптом/runbook с read-before-create и
 явной проверкой target folder. Terraform на этом этапе не используется.
 
+Конкретная следующая последовательность:
+
+1. Подтвердить доступ к отдельному Yandex Cloud folder и возможность создать
+   DNS/TLS для `staging.zvenfit.ru`.
+2. Выбрать отдельный Telegram bot/test chat и retention синтетических лидов.
+3. Подготовить IAM matrix с отдельными deploy/runtime SA без production roles.
+4. Реализовать `scripts/bootstrap-staging.sh` с режимом `--dry-run`, проверкой
+   folder ID и идемпотентным read-before-create.
+5. Создать YDB с deletion protection, обе Functions, timer trigger, bucket,
+   public invoker bindings и monitoring selectors.
+6. Создать GitHub Environment `staging`; положить в него только staging
+   credentials. `FITBASE_API_TOKEN` туда не добавлять.
+7. Выполнить ручной **Deploy to Staging** и read-only smoke.
+
+Критерий завершения: `staging.zvenfit.ru` обслуживается только staging bucket и
+functions; staging identities не имеют доступа к production folder; расписание
+возвращает динамические fixture-сценарии без Fitbase credentials.
+
 ### Этап 3 — staging Playwright E2E
 
 Ветка: `test/staging-e2e`
@@ -663,6 +739,21 @@ Bootstrap выполняется идемпотентным admin-скрипто
 - техническая проверка YDB/status;
 - cleanup/TTL;
 - отсутствие real customer data и внешней публикации artifacts.
+
+Конкретные шаги:
+
+1. Добавить в локальный Playwright-проект отдельный project/config для staging.
+2. Проверять sitemap, критические кнопки, schedule fixture и CORS.
+3. Отправлять один синтетический lead с уникальным `submission_id`.
+4. Проверять только технические поля записи через минимальный read-only YDB
+   probe; имя и телефон не выводить в лог/отчёт.
+5. Проверять `telegram_status` в test contour и удалять запись cleanup-командой
+   либо TTL.
+6. Не загружать reports, traces, screenshots, videos и fixture data во внешние
+   системы.
+
+Критерий завершения: тест доказывает UI → staging Function → staging YDB → test
+Telegram, не касаясь production и не создавая рабочую заявку.
 
 ### Этап 4 — production dry-run
 
@@ -674,6 +765,14 @@ Bootstrap выполняется идемпотентным admin-скрипто
 - unit/security tests на нулевые side effects;
 - Node signer и production dry-run test в локальном Playwright project.
 
+Реализовывать только после зелёного staging E2E. Сначала общий pure validation
+pipeline и unit-тесты нулевых side effects, затем HMAC authentication, после —
+локальный signer. Production secret не попадает в browser context и artifacts.
+
+Критерий завершения: валидная подпись получает технический success, а store,
+rate limiter и Telegram имеют ноль вызовов; любой частичный/невалидный набор
+test headers получает `401` без fallback в live flow.
+
 ### Этап 5 — release gate и rollback
 
 Ветка: `feature/release-gates`
@@ -683,6 +782,10 @@ Bootstrap выполняется идемпотентным admin-скрипто
 - release manifest;
 - version/artifact rollback;
 - учебный rollback без реальных заявок.
+
+Критерий завершения: staging E2E и production dry-run являются обязательными
+release gates, предыдущие Function versions и frontend восстанавливаются по
+runbook, а учебный rollback подтверждён smoke-тестом.
 
 ### Этап 6 — hardening
 
