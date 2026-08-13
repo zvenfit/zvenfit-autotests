@@ -1,6 +1,15 @@
 import { expect, test } from '@playwright/test';
+import { blockNonEssentialResources } from '../support/network';
 
 test.describe('Read-only пользовательские переходы', () => {
+  test.beforeEach(async ({ page, baseURL }) => {
+    if (!baseURL) {
+      throw new Error('Playwright baseURL is required');
+    }
+
+    await blockNonEssentialResources(page, baseURL);
+  });
+
   test('главный CTA открывает актуальную форму заявки', async ({ page }) => {
     await page.goto('/', { waitUntil: 'domcontentloaded' });
     await page.locator('a[href="/forma-dlya-zayavki/"]:visible').first().click();

@@ -8,16 +8,15 @@ const projectRoot = __dirname;
 const frontendRoot = process.env.ZVENFIT_FRONTEND_PATH
   ? path.resolve(process.env.ZVENFIT_FRONTEND_PATH)
   : path.resolve(__dirname, '../zvenfit-frontend');
+const isCI = Boolean(process.env.CI);
 
 export default defineConfig({
   testDir: './tests',
   fullyParallel: true,
-  forbidOnly: Boolean(process.env.CI),
-  retries: process.env.CI ? 2 : 0,
-  workers: process.env.CI ? 2 : undefined,
-  reporter: process.env.CI
-    ? [['line'], ['html', { open: 'never' }]]
-    : [['list'], ['html', { open: 'never' }]],
+  forbidOnly: isCI,
+  retries: isCI ? 2 : 0,
+  workers: isCI ? 2 : undefined,
+  reporter: isCI ? 'line' : [['list'], ['html', { open: 'never' }]],
   timeout: 30_000,
   expect: {
     timeout: 7_000,
@@ -27,9 +26,10 @@ export default defineConfig({
     baseURL,
     locale: 'ru-RU',
     timezoneId: 'Europe/Moscow',
-    trace: 'retain-on-failure',
-    screenshot: 'only-on-failure',
-    video: 'retain-on-failure',
+    extraHTTPHeaders: externalBaseUrl ? { 'X-Zvenfit-Test-Run': 'playwright-read-only' } : undefined,
+    trace: isCI ? 'off' : 'retain-on-failure',
+    screenshot: isCI ? 'off' : 'only-on-failure',
+    video: isCI ? 'off' : 'retain-on-failure',
   },
   projects: [
     {

@@ -34,6 +34,21 @@ npm run test:prod     # read-only проверка https://zvenfit.ru
 npm run report        # открыть последний HTML-отчёт
 ```
 
+## Автоматические проверки
+
+GitHub Actions использует два checkout: текущий `zvenfit-autotests` и
+`zvenfit-frontend/main`. Frontend собирается в development-режиме, после чего
+запускаются TypeScript и весь локальный Playwright suite.
+
+- **Playwright quality** — на каждый PR и push в `master`;
+- **Production read-only smoke** — ежедневно и вручную, только
+  `tests/contracts` + `tests/journeys` против `https://zvenfit.ru`.
+
+CI не получает secrets и не загружает artifacts. В CI отключены HTML report,
+trace, screenshots и video. Production browser requests помечаются заголовком
+`X-Zvenfit-Test-Run: playwright-read-only`, а внешние analytics/media запросы
+блокируются до отправки.
+
 Если frontend расположен в другом месте:
 
 ```bash

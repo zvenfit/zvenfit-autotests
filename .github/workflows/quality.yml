@@ -1,0 +1,68 @@
+name: Playwright quality
+
+on:
+  pull_request:
+  push:
+    branches:
+      - master
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: autotests-quality-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  quality:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    env:
+      CI: 'true'
+      ZVENFIT_FRONTEND_PATH: ${{ github.workspace }}/zvenfit-frontend
+
+    steps:
+      - name: Checkout autotests
+        uses: actions/checkout@v6
+        with:
+          path: zvenfit-autotests
+          persist-credentials: false
+
+      - name: Checkout frontend main
+        uses: actions/checkout@v6
+        with:
+          repository: zvenfit/zvenfit-frontend
+          ref: main
+          path: zvenfit-frontend
+          persist-credentials: false
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v6
+        with:
+          node-version: '22'
+          cache: npm
+          cache-dependency-path: |
+            zvenfit-autotests/package-lock.json
+            zvenfit-frontend/package-lock.json
+
+      - name: Install dependencies
+        run: |
+          npm ci --prefix zvenfit-autotests
+          npm ci --prefix zvenfit-frontend
+
+      - name: Build frontend test revision
+        working-directory: zvenfit-frontend
+        env:
+          NODE_ENV: development
+          ASSET_VERSION: ci-${{ github.sha }}
+        run: npm run build
+
+      - name: Install Chromium
+        working-directory: zvenfit-autotests
+        run: npx playwright install --with-deps chromium
+
+      - name: Typecheck and test
+        working-directory: zvenfit-autotests
+        run: npm run check
+

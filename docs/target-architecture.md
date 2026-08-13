@@ -357,15 +357,20 @@ Playwright не обязан читать Telegram API. Достаточно п�
 
 ### Как проект получает статус
 
-Исходный код и документация публикуются в `zvenfit/zvenfit-autotests`, но полный
-E2E пока запускается локально рядом с `zvenfit-frontend`:
+Исходный код и документация публикуются в `zvenfit/zvenfit-autotests`. Первый
+CI-контур уже использует два публичных checkout:
 
-- первый release gate — локальный `npm run test:staging`, после которого человек
-  подтверждает production environment;
-- позже возможен изолированный runner с двумя checkout и запретом загрузки
-  reports, traces, screenshots, videos и test data;
-- hosted CI нельзя подключать автоматически, пока не зафиксированы revision
-  соседнего frontend, сетевые границы и политика хранения artifacts.
+- PR/push quality собирает `zvenfit-frontend/main` и запускает весь локальный
+  Playwright suite;
+- ежедневный production smoke запускает только read-only contracts/journeys;
+- workflow не получает secrets и не содержит upload-artifact steps;
+- в CI полностью отключены HTML report, traces, screenshots и videos;
+- внешний production traffic помечается диагностическим заголовком, а analytics
+  requests блокируются браузерным route до отправки.
+
+Будущий staging E2E с YDB и test Telegram остаётся локальным release gate либо
+переезжает на изолированный runner только после появления staging credentials и
+политики cleanup. Эти credentials нельзя выдавать публичному PR workflow.
 
 Публикация source code не разрешает публикацию результатов прогонов или
 чувствительных runtime-конфигураций.
