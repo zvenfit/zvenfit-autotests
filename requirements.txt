@@ -1,6 +1,0 @@
-playwright
-pytest
-pytest-playwright
-allure-pytest
-requests
-requests-mock

@@ -1,0 +1,66 @@
+name: Production read-only smoke
+
+on:
+  schedule:
+    - cron: '17 4 * * *'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: autotests-production-smoke
+  cancel-in-progress: true
+
+jobs:
+  smoke:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    env:
+      CI: 'true'
+      PLAYWRIGHT_BASE_URL: https://zvenfit.ru
+      ZVENFIT_FRONTEND_PATH: ${{ github.workspace }}/zvenfit-frontend
+
+    steps:
+      - name: Checkout autotests
+        uses: actions/checkout@v6
+        with:
+          path: zvenfit-autotests
+          persist-credentials: false
+
+      - name: Checkout frontend main
+        uses: actions/checkout@v6
+        with:
+          repository: zvenfit/zvenfit-frontend
+          ref: main
+          path: zvenfit-frontend
+          persist-credentials: false
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v6
+        with:
+          node-version: '22'
+          cache: npm
+          cache-dependency-path: |
+            zvenfit-autotests/package-lock.json
+            zvenfit-frontend/package-lock.json
+
+      - name: Install dependencies
+        run: |
+          npm ci --prefix zvenfit-autotests
+          npm ci --prefix zvenfit-frontend
+
+      - name: Build expected frontend revision
+        working-directory: zvenfit-frontend
+        env:
+          NODE_ENV: development
+          ASSET_VERSION: smoke-${{ github.run_id }}
+        run: npm run build
+
+      - name: Install Chromium
+        working-directory: zvenfit-autotests
+        run: npx playwright install --with-deps chromium
+
+      - name: Run read-only production suite
+        working-directory: zvenfit-autotests
+        run: npm run test:prod
