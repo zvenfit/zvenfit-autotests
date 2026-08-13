@@ -7,3 +7,12 @@ blob-report/
 !.env.example
 .DS_Store
 *.log
+playwright/.auth/
+storage-state*.json
+*.har
+*.png
+*.jpg
+*.jpeg
+*.webp
+*.mp4
+*.webm

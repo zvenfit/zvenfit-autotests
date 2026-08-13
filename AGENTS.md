@@ -1,6 +1,7 @@
 # Project rules — ZvenFit Autotests
 
-- This is a local-only project. Never sync its files, test data, reports, traces, screenshots, videos, or knowledge to Stefania.
+- Source code and documentation may be synced only to the official GitHub repository `zvenfit/zvenfit-autotests`.
+- Never publish test data, reports, traces, screenshots, videos, browser state, secrets, or local knowledge with the source code.
 - Never use Stefania, its memory, Wiki, DataCatalog, remote knowledge-base adapters, or sync workflows for this project.
 - Do not send real customer data or create real leads. Functional API tests must use Playwright request interception or a local mock.
 - Do not commit secrets, real `.env*` files, browser storage state, traces, screenshots, or videos.

@@ -1,6 +1,6 @@
 # ZvenFit autotests
 
-Новый локальный проект e2e-автотестов для [zvenfit.ru](https://zvenfit.ru) на TypeScript и Playwright.
+Новый проект e2e-автотестов для [zvenfit.ru](https://zvenfit.ru) на TypeScript и Playwright.
 
 По умолчанию Playwright раздаёт свежую сборку соседнего `../zvenfit-frontend/dist` на `http://127.0.0.1:4173` встроенным локальным сервером в режиме read-only. Соседний репозиторий не пересобирается и не изменяется. Маршруты автоматически читаются из актуального `dist/sitemap.xml`, поэтому новые страницы попадают в контрактный набор без ручного списка.
 
@@ -83,7 +83,12 @@ Production canary с созданием и последующим удалени
 
 Используем `feature/*`, `bugfix/*`, `hotfix/*`, `refactor/*`, `test/*`, `chore/*`. Префикс `codex` запрещён.
 
-Проект локальный: Стефания, её память и синхронизация базы знаний здесь не используются. Не добавляйте в Git `.env`, реальные данные клиентов, storage state, отчёты, trace, screenshot и video.
+Исходный код и документация хранятся в публичном
+[`zvenfit/zvenfit-autotests`](https://github.com/zvenfit/zvenfit-autotests).
+Стефания, её память и синхронизация базы знаний здесь не используются. Не
+добавляйте в Git `.env`, реальные данные клиентов, storage state, отчёты,
+trace, screenshot и video. Локальные browser artifacts не публикуются в GitHub
+Actions и внешние хранилища.
 
 Документация:
 

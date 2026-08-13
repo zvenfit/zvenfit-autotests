@@ -4,7 +4,7 @@
 
 Дата: 2026-08-14
 
-Репозитории: `zvenfit-frontend` и локальный `zvenfit-autotests`
+Репозитории: `zvenfit-frontend` и публичный `zvenfit/zvenfit-autotests`
 
 ## Статус реализации на 2026-08-14
 
@@ -51,8 +51,9 @@
 4. Staging проходит настоящий E2E заявки с синтетическими данными.
 5. Production получает подписанный dry-run в текущем lead endpoint; dry-run
    валидирует production-конфигурацию, но не пишет заявку и не вызывает Telegram.
-6. `zvenfit-autotests` остаётся локальным. Его файлы, данные и browser artifacts
-   не загружаются в GitHub Actions и внешние хранилища.
+6. Исходный код `zvenfit-autotests` хранится в официальном GitHub-репозитории.
+   Test data, secrets и browser artifacts не коммитятся и не загружаются в
+   GitHub Actions или внешние хранилища.
 7. Terraform, API Gateway, Lockbox и OIDC рассматриваются отдельно. Это полезные
    улучшения, но ни одно из них не является prerequisite для staging.
 
@@ -354,16 +355,20 @@ Playwright не обязан читать Telegram API. Достаточно п�
 `telegram_status=sent`; правильность bot/chat configuration проверяется отдельным
 операционным smoke при bootstrap/rotation.
 
-### Как локальный проект получает статус
+### Как проект получает статус
 
-`zvenfit-autotests` не синкается в CI. Возможны два безопасных режима:
+Исходный код и документация публикуются в `zvenfit/zvenfit-autotests`, но полный
+E2E пока запускается локально рядом с `zvenfit-frontend`:
 
-- сначала ручной release gate: локально запускается `npm run test:staging`, а
-  production environment подтверждается только после зелёного результата;
-- позже — приватный self-hosted runner, где репозиторий уже находится локально и
-  настроен не загружать reports, traces, screenshots или test data.
+- первый release gate — локальный `npm run test:staging`, после которого человек
+  подтверждает production environment;
+- позже возможен изолированный runner с двумя checkout и запретом загрузки
+  reports, traces, screenshots, videos и test data;
+- hosted CI нельзя подключать автоматически, пока не зафиксированы revision
+  соседнего frontend, сетевые границы и политика хранения artifacts.
 
-На hosted GitHub runner этот репозиторий не checkout-ится и не публикуется.
+Публикация source code не разрешает публикацию результатов прогонов или
+чувствительных runtime-конфигураций.
 
 Для проверки YDB тесту нужен отдельный read-only staging probe или service
 account с минимальным доступом только к техническим полям. Он не должен
@@ -850,4 +855,6 @@ runbook, а учебный rollback подтверждён smoke-тестом.
 6. YDB migrations остаются versioned и backward-compatible;
 7. rollback функций и frontend проверен практическим упражнением;
 8. monitoring разделяет environments и не содержит PII;
-9. локальный `zvenfit-autotests` и его artifacts никуда не синхронизируются.
+9. в GitHub синхронизируются только source code и документация
+   `zvenfit-autotests`; test data, secrets и browser artifacts остаются
+   локальными.
