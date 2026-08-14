@@ -20,7 +20,7 @@
 | Расписание | двухнедельный API-запрос, фильтры типа/клуба/зала, пустая неделя | functional, mocked API |
 | Расписание | dialog с клавиатуры, HTML sanitization, HTTP и invalid-payload ошибки | functional, mocked API |
 | Production | все sitemap-контракты, продуктовые блоки, переходы и runtime API config | read-only |
-| Адаптивность | отсутствие горизонтального overflow на всех sitemap-страницах в desktop/mobile Chrome; breakpoint-матрица критичной grid-страницы мини-групп | cross-viewport + responsive contract |
+| Адаптивность | отсутствие горизонтального overflow на всех sitemap-страницах в desktop/mobile Chrome и на девяти пограничных ширинах; углублённый grid-контракт мини-групп | cross-viewport + responsive contract |
 
 ## Следующие приоритеты
 
