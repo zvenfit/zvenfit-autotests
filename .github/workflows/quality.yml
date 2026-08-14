@@ -35,7 +35,7 @@ jobs:
         uses: actions/checkout@v6
         with:
           repository: zvenfit/zvenfit-frontend
-          ref: ${{ github.event.pull_request.number == 2 && '3726748311cdce557fd86195b9e303ac12d3e783' || 'main' }}
+          ref: ${{ github.event.pull_request.number == 2 && '88a7ed59b4e9aa85e6c50e325429bbe648474f43' || 'main' }}
           path: zvenfit-frontend
           persist-credentials: false
 
