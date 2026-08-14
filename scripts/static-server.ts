@@ -1,4 +1,4 @@
-import { createReadStream, statSync } from 'node:fs';
+import { readFile, statSync } from 'node:fs';
 import { createServer } from 'node:http';
 import path from 'node:path';
 
@@ -73,17 +73,31 @@ const server = createServer((request, response) => {
     return;
   }
 
-  response.writeHead(200, {
-    'Cache-Control': 'no-store',
-    'Content-Type': contentTypes[path.extname(filePath).toLowerCase()] ?? 'application/octet-stream',
-  });
-
   if (request.method === 'HEAD') {
+    response.writeHead(200, {
+      'Cache-Control': 'no-store',
+      'Content-Type': contentTypes[path.extname(filePath).toLowerCase()] ?? 'application/octet-stream',
+    });
     response.end();
     return;
   }
 
-  createReadStream(filePath).pipe(response);
+  readFile(filePath, (error, contents) => {
+    if (response.destroyed) return;
+
+    if (error) {
+      response.writeHead(500, { 'Content-Type': 'text/plain; charset=utf-8' });
+      response.end('Internal Server Error');
+      return;
+    }
+
+    response.writeHead(200, {
+      'Cache-Control': 'no-store',
+      'Content-Length': contents.byteLength,
+      'Content-Type': contentTypes[path.extname(filePath).toLowerCase()] ?? 'application/octet-stream',
+    });
+    response.end(contents);
+  });
 });
 
 server.listen(port, host, () => {

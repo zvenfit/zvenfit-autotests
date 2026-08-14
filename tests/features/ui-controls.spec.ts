@@ -1,6 +1,15 @@
 import { expect, test } from '@playwright/test';
+import { blockNonEssentialResources } from '../support/network';
 
 test.describe('Поведение классов UI-кнопок', () => {
+  test.beforeEach(async ({ page, baseURL }) => {
+    if (!baseURL) throw new Error('Playwright baseURL is required');
+    await blockNonEssentialResources(page, baseURL, {
+      allowLayoutResources: true,
+      allowRuntimeResources: true,
+    });
+  });
+
   test('мобильное меню раскрывает навигацию', async ({ page, isMobile }) => {
     test.skip(!isMobile, 'Мобильное меню проверяется на mobile viewport');
     await page.goto('/', { waitUntil: 'domcontentloaded' });

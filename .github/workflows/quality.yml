@@ -29,11 +29,13 @@ jobs:
           path: zvenfit-autotests
           persist-credentials: false
 
-      - name: Checkout frontend main
+      # PR #2 is paired with zvenfit-frontend#54. Pin the reviewed frontend
+      # revision only for this PR; master and every future PR use main.
+      - name: Checkout frontend revision
         uses: actions/checkout@v6
         with:
           repository: zvenfit/zvenfit-frontend
-          ref: main
+          ref: ${{ github.event.pull_request.number == 2 && 'ea6d795f6797609bf2069e3a610617faef704e9b' || 'main' }}
           path: zvenfit-frontend
           persist-credentials: false
 
@@ -65,4 +67,3 @@ jobs:
       - name: Typecheck and test
         working-directory: zvenfit-autotests
         run: npm run check
-
