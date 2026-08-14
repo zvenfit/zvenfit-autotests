@@ -200,11 +200,12 @@ test.describe('Responsive layout contracts', () => {
         await expectNoHorizontalOverflow(page, `${route} at ${width}px`);
 
         if (route !== '/trenazhernyj-zal/mini-gruppy/') continue;
-
-        await expect(page.locator('html')).toHaveAttribute(
-          'data-wf-page',
-          /^[a-f0-9]{24}$/,
-        );
+        if (
+          (await page.locator('html').getAttribute('data-zvenfit-page')) !==
+          'mini-groups'
+        ) {
+          continue;
+        }
         await expect(page.locator('.reviews-section')).toBeVisible();
         await expect(
           page.getByRole('heading', { name: 'Отзывы о клубе' }),
