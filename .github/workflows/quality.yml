@@ -24,7 +24,7 @@ jobs:
 
     steps:
       - name: Checkout autotests
-        uses: actions/checkout@v6
+        uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
         with:
           path: zvenfit-autotests
           persist-credentials: false
@@ -32,7 +32,7 @@ jobs:
       # PR #2 is paired with zvenfit-frontend#54. Pin the reviewed frontend
       # revision only for this PR; master and every future PR use main.
       - name: Checkout frontend revision
-        uses: actions/checkout@v6
+        uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
         with:
           repository: zvenfit/zvenfit-frontend
           ref: ${{ github.event.pull_request.number == 2 && 'ea6d795f6797609bf2069e3a610617faef704e9b' || 'main' }}
@@ -40,7 +40,7 @@ jobs:
           persist-credentials: false
 
       - name: Set up Node.js
-        uses: actions/setup-node@v6
+        uses: actions/setup-node@249970729cb0ef3589644e2896645e5dc5ba9c38 # v6
         with:
           node-version: '22'
           cache: npm

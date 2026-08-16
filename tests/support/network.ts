@@ -10,6 +10,7 @@ const runtimeResourcePrefixes = [
 ] as const;
 
 type NetworkOptions = {
+  allowExternalDocuments?: boolean;
   allowLayoutResources?: boolean;
   allowRuntimeResources?: boolean;
 };
@@ -18,6 +19,7 @@ export async function blockNonEssentialResources(
   page: Page,
   baseURL: string,
   {
+    allowExternalDocuments = true,
     allowLayoutResources = false,
     allowRuntimeResources = false,
   }: NetworkOptions = {},
@@ -37,6 +39,8 @@ export async function blockNonEssentialResources(
       allowRuntimeResources &&
       resourceType === 'script' &&
       runtimeResourcePrefixes.some(prefix => requestUrl.startsWith(prefix));
+    const isAllowedExternalDocument =
+      allowExternalDocuments && resourceType === 'document';
 
     if (['image', 'media'].includes(resourceType)) {
       return route.abort();
@@ -44,7 +48,7 @@ export async function blockNonEssentialResources(
 
     if (
       requestOrigin !== allowedOrigin &&
-      resourceType !== 'document' &&
+      !isAllowedExternalDocument &&
       !isAllowedLayoutResource &&
       !isAllowedRuntimeResource
     ) {

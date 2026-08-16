@@ -38,7 +38,7 @@ export default defineConfig({
   outputDir: 'test-results',
   use: {
     baseURL: EXPECTED_ORIGIN,
-    httpCredentials: { username, password },
+    httpCredentials: { username, password, origin: EXPECTED_ORIGIN },
     locale: 'ru-RU',
     timezoneId: 'Europe/Moscow',
     userAgent: 'ZvenFit-Playwright-Staging/1.0',
