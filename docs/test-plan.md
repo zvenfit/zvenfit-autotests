@@ -20,6 +20,7 @@
 | Расписание | двухнедельный API-запрос, фильтры типа/клуба/зала, пустая неделя | functional, mocked API |
 | Расписание | dialog с клавиатуры, HTML sanitization, HTTP и invalid-payload ошибки | functional, mocked API |
 | Production | все sitemap-контракты, продуктовые блоки, переходы и runtime API config | read-only |
+| Staging | Basic Auth boundary, `noindex`, отсутствие production analytics, synthetic schedule и native lead validation без API request | authenticated read-only |
 | Адаптивность | отсутствие горизонтального overflow на всех sitemap-страницах в desktop/mobile Chrome и на девяти пограничных ширинах; углублённый grid-контракт мини-групп | cross-viewport + responsive contract |
 
 ## Следующие приоритеты
@@ -27,7 +28,8 @@
 1. Расширить SEO-контракт на Open Graph и JSON-LD.
 2. Добавить visual snapshots ключевых страниц после стабилизации дизайна.
 3. Включить axe-проверки доступности после согласования допустимых исключений Webflow.
-4. Добавить staging E2E после появления изолированного backend и технического YDB probe.
+4. Добавить отдельный read-only YDB probe до первого сценария, который создаёт
+   synthetic staging lead; текущий staging smoke лидов не создаёт.
 
 ## Как понимать «проверяются все кнопки»
 
@@ -48,3 +50,5 @@
   загружает HTML reports, traces, screenshots или video.
 - Ежедневный production suite выполняет только read-only contracts/journeys;
   feature-тесты формы в него не входят.
+- Staging suite запускается только с exact-origin guard, получает лишь Basic
+  Auth и проверяет invalid submit с нулём запросов в `/api/lead`.

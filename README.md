@@ -31,6 +31,7 @@ npm run test:features  # форма и расписание с локальны�
 npm run test:headed   # браузер с интерфейсом
 npm run test:ui       # Playwright UI mode
 npm run test:prod     # read-only проверка https://zvenfit.ru
+npm run test:staging  # protected staging smoke; нужны только Basic Auth env
 npm run report        # открыть последний HTML-отчёт
 ```
 
@@ -43,11 +44,16 @@ GitHub Actions использует два checkout: текущий `zvenfit-aut
 - **Playwright quality** — на каждый PR и push в `master`;
 - **Production read-only smoke** — ежедневно и вручную, только
   `tests/contracts` + `tests/journeys` против `https://zvenfit.ru`.
+- **Staging smoke** — reusable workflow, который вызывает
+  `zvenfit-frontend` после успешного staging deploy. Frontend передаёт только
+  staging Basic Auth secrets, а autotests revision закрепляется commit SHA.
 
-CI не получает secrets и не загружает artifacts. В CI отключены HTML report,
-trace, screenshots и video. Production browser requests помечаются заголовком
-`X-Zvenfit-Test-Run: playwright-read-only`, а внешние analytics/media запросы
-блокируются до отправки.
+Quality и production CI не получают secrets. Staging job получает только Basic
+Auth от вызывающего frontend workflow. Ни один CI job не загружает artifacts;
+HTML report, trace, screenshots и video отключены. Production browser requests
+помечаются заголовком `X-Zvenfit-Test-Run: playwright-read-only`, staging —
+`playwright-staging-read-only`; внешние analytics/media запросы блокируются до
+отправки.
 
 Если frontend расположен в другом месте:
 
@@ -61,6 +67,10 @@ ZVENFIT_FRONTEND_PATH=/absolute/path/to/zvenfit-frontend npm test
 PLAYWRIGHT_BASE_URL=https://example.test npx playwright test tests/contracts tests/journeys
 ```
 
+Staging suite нельзя перенаправить на другой origin: отдельный config принимает
+только точный `https://staging.zvenfit.ru` и требует
+`STAGING_BASIC_AUTH_USERNAME`/`STAGING_BASIC_AUTH_PASSWORD`.
+
 Полный `npm test` предназначен для локального frontend: только feature-тесты формы выполняют submit, и их API всегда подменён через `page.route()`.
 
 ## Структура
@@ -71,8 +81,10 @@ scripts/               локальный read-only static server
 tests/contracts/       все sitemap-страницы, SEO и продуктовые блоки
 tests/journeys/        read-only пользовательские переходы
 tests/features/        форма и расписание с локальными API mocks
+tests/staging/         authenticated read-only smoke изолированного staging
 tests/support/         sitemap loader, network helpers и API fixtures
 playwright.config.ts   окружение, webServer и браузерные профили
+playwright.staging.config.ts  fail-closed конфиг только для staging
 ```
 
 ## Как тестируется заявка без спама

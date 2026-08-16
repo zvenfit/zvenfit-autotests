@@ -11,6 +11,7 @@
     "test:ui": "playwright test --ui",
     "test:debug": "playwright test --debug",
     "test:prod": "PLAYWRIGHT_BASE_URL=https://zvenfit.ru playwright test tests/contracts tests/journeys --project=chromium-desktop --workers=2 --retries=1",
+    "test:staging": "playwright test --config=playwright.staging.config.ts",
     "test:list": "playwright test --list",
     "report": "playwright show-report",
     "serve:frontend": "node --disable-warning=MODULE_TYPELESS_PACKAGE_JSON --experimental-strip-types scripts/static-server.ts",

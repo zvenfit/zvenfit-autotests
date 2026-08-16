@@ -1,14 +1,14 @@
 # Целевая архитектура ZvenFit и план реализации
 
-Статус: **пересмотрено после аудита `zvenfit-frontend`**
+Статус: **staging bootstrap и безопасный browser smoke реализованы**
 
-Дата: 2026-08-14
+Дата: 2026-08-17
 
 Репозитории: `zvenfit-frontend` и публичный `zvenfit/zvenfit-autotests`
 
-## Статус реализации на 2026-08-14
+## Статус реализации на 2026-08-17
 
-Завершены два кодовых milestone, cloud-ресурсы не создавались:
+Завершены кодовые milestone и bootstrap изолированного staging:
 
 - локальный Playwright baseline: 167 passed, 45 ожидаемо skipped;
 - suite использует выделенный `127.0.0.1:43987` и не подключается к случайному
@@ -33,7 +33,12 @@
 - HTTP smoke диапазона `2030-12-31 → 2031-01-01` подтвердил корректный переход
   через границу года и прежний публичный контракт.
 
-Следующий milestone — административный bootstrap изолированных staging-ресурсов.
+Текущий staging доступен через Basic-auth API Gateway на
+`https://staging.zvenfit.ru`; DNS, TLS, private bucket/Functions/YDB, SWS/ARL,
+manual deploy и browser smoke проверены. Playwright staging suite принадлежит
+этому репозиторию и вызывается из frontend deploy как закреплённый reusable
+workflow. Он не создаёт лид: настоящий POST появится только вместе с отдельным
+read-only YDB probe.
 
 ## 1. Итоговое решение
 
@@ -45,10 +50,11 @@
 
 1. Сохраняем текущую связку: static frontend в Object Storage, прямые URL двух
    Yandex Cloud Functions, YDB и timer trigger.
-2. Добавляем отдельный Yandex Cloud folder для staging со своими Functions,
-   YDB, trigger, bucket, service accounts, секретами и Telegram test chat.
+2. Используем отдельный Yandex Cloud folder для staging со своими Functions,
+   YDB, trigger, bucket, service accounts и sink без Telegram-вызовов.
 3. Обобщаем существующие deploy-скрипты и GitHub Actions под два окружения.
-4. Staging проходит настоящий E2E заявки с синтетическими данными.
+4. Staging проходит authenticated browser smoke без создания заявки; полный
+   lead E2E отложен до появления read-only YDB probe.
 5. Production получает подписанный dry-run в текущем lead endpoint; dry-run
    валидирует production-конфигурацию, но не пишет заявку и не вызывает Telegram.
 6. Исходный код `zvenfit-autotests` хранится в официальном GitHub-репозитории.

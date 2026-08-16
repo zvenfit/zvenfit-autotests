@@ -12,6 +12,7 @@ const isCI = Boolean(process.env.CI);
 
 export default defineConfig({
   testDir: './tests',
+  testIgnore: 'staging/**',
   fullyParallel: true,
   forbidOnly: isCI,
   retries: isCI ? 2 : 0,
