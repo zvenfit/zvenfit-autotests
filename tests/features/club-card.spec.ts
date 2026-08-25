@@ -86,12 +86,15 @@ test.describe('Клубная карта', () => {
     await expect(clubCard.previousReview).toBeEnabled();
   });
 
-  test('мобильное меню приводит к тарифам без перекрытия заголовка', async ({ page, isMobile }) => {
+  test('мобильное меню приводит к тарифам и повторно открывается одним нажатием', async ({ page, isMobile }) => {
     test.skip(!isMobile, 'Мобильный якорь проверяется в mobile-проекте');
     const clubCard = new ClubCardPage(page);
     await clubCard.goto();
 
-    await page.getByRole('button', { name: 'меню' }).click();
+    const menuToggle = page.getByRole('button', { name: 'меню' });
+    const menu = page.locator('.w-dropdown-list');
+
+    await menuToggle.click();
     await page.getByRole('link', { name: 'тарифы', exact: true }).click();
 
     await expect(page).toHaveURL(/#prices$/);
@@ -103,6 +106,12 @@ test.describe('Клубная карта', () => {
       )
       .toBe(104);
     await expect(page.getByRole('heading', { level: 2, name: 'тарифы и цены' })).toBeVisible();
+    await expect(menu).toBeHidden();
+    await expect(menuToggle).toHaveAttribute('aria-expanded', 'false');
+
+    await menuToggle.click();
+    await expect(menu).toBeVisible();
+    await expect(menuToggle).toHaveAttribute('aria-expanded', 'true');
   });
 
   test('контакты доступны из мобильного меню на обеих мобильных раскладках', async ({ page, isMobile }) => {
