@@ -57,6 +57,23 @@ test('renders the isolated synthetic schedule', async ({ page }) => {
   await expect(schedule.getByText('Тест: групповая тренировка', { exact: true })).toBeVisible();
 });
 
+test('serves the club card from the self-training entry point', async ({ page }) => {
+  const gymResponse = await page.goto('/trenazhernyj-zal/');
+  expect(gymResponse?.status()).toBe(200);
+
+  const selfTrainingCard = page.locator('.cat_card.areas_page').filter({
+    has: page.getByRole('heading', { level: 3, name: 'Самостоятельно' }),
+  });
+  const clubCardLink = selfTrainingCard.getByRole('link', { name: 'подробнее' });
+  await expect(clubCardLink).toHaveAttribute('href', '/klubnaya-karta/');
+  await clubCardLink.click();
+
+  await expectStagingLocation(page, '/klubnaya-karta/');
+  await expect(page.getByRole('heading', { level: 1, name: 'Клубная карта' })).toBeVisible();
+  await expect(page.locator('.club-card-price')).toHaveCount(6);
+  await expect(page.locator('meta[name="robots"]')).toHaveAttribute('content', /noindex/i);
+});
+
 test('blocks an invalid lead in the browser without calling the API', async ({ page }) => {
   let leadRequests = 0;
   await page.route('**/api/lead', route => {
