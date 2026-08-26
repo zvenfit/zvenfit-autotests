@@ -11,6 +11,7 @@
 | Внутренние и fragment-ссылки | destination присутствует в sitemap, fragment target существует | interaction contract |
 | UI-контролы | mobile menu, Webflow slider, карусель отзывов, desktop-аккордеон, якорь и history back | functional |
 | Главная | три направления, две площадки, приложение и переход к заявке | contract + journey |
+| Клубная карта | пять видов карт, шесть тарифов, безопасные CTA, путь через «Самостоятельно», карусель отзывов, mobile-якоря и skip-link | contract + journey + functional + responsive + accessibility |
 | Групповые программы | актуальные тарифы, скидка приложения и раскрытие полной команды | product contract |
 | Контакты | две карточки Яндекс Карт, Telegram, WhatsApp, App Store, RuStore и APK | product contract |
 | Приложение | оффер 15%, условия акции и три download-ссылки | product contract |
@@ -21,6 +22,7 @@
 | Расписание | dialog с клавиатуры, HTML sanitization, HTTP и invalid-payload ошибки | functional, mocked API |
 | Production | все sitemap-контракты, продуктовые блоки, переходы и runtime API config | read-only |
 | Staging | Basic Auth boundary, `noindex`, отсутствие production analytics, synthetic schedule и native lead validation без API request | authenticated read-only |
+| Staging: клубная карта | маршрут через «Самостоятельно», основной контент, шесть тарифов и `noindex` | authenticated read-only |
 | Адаптивность | отсутствие горизонтального overflow на всех sitemap-страницах в desktop/mobile Chrome и на девяти пограничных ширинах; углублённый grid-контракт мини-групп | cross-viewport + responsive contract |
 
 ## Следующие приоритеты
