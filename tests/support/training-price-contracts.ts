@@ -69,7 +69,7 @@ const tabbedPriceContracts: TabbedPriceContract[] = [
     ],
   },
   {
-    route: '/trenazhernyj-zal/',
+    route: '/personalnye-trenirovki/',
     sectionId: '#teen-prices',
     standard: [
       { name: '1 тренировка', price: '3000₽' },
@@ -182,16 +182,21 @@ export async function expectTabbedTrainingPrices(page: Page): Promise<void> {
     if (contract.route === '/parnye-trenirovki/') {
       await expect(section).toContainText(/Все цены указаны за\s*двоих/i);
     }
-
-    if (contract.route === '/trenazhernyj-zal/') {
-      const teenCard = prices.areaCard(/Персональные тренировки для\s*подростков/i);
-      await expect(teenCard).toContainText(/выгодой до\s*20%/i);
-      await expect(teenCard.getByRole('link', { name: 'подробнее' })).toHaveAttribute(
-        'href',
-        '#teen-prices',
-      );
-    }
   }
+
+  await expectSuccessfulNavigation(prices, '/trenazhernyj-zal/');
+  const teenCard = prices.areaCard(/Персональные тренировки для\s*подростков/i);
+  await expect(teenCard).toContainText(/выгодой до\s*20%/i);
+  const teenPricesLink = teenCard.getByRole('link', { name: 'подробнее' });
+  await expect(teenPricesLink).toHaveAttribute(
+    'href',
+    '/personalnye-trenirovki/#teen-prices',
+  );
+  await expect(prices.section('#teen-prices')).toHaveCount(0);
+
+  await teenPricesLink.click();
+  await expect(page).toHaveURL(/\/personalnye-trenirovki\/#teen-prices$/);
+  await expect(prices.section('#teen-prices')).toBeAttached();
 }
 
 export async function expectStandaloneReformerPrices(page: Page): Promise<void> {
@@ -260,7 +265,7 @@ export async function expectTrainingPriceCopy(page: Page): Promise<void> {
 
 export async function expectTeenPriceTabs(page: Page): Promise<void> {
   const prices = new TrainingPricesPage(page);
-  await expectSuccessfulNavigation(prices, '/trenazhernyj-zal/');
+  await expectSuccessfulNavigation(prices, '/personalnye-trenirovki/');
 
   const standardTab = prices.tab('#teen-prices', 'Стандартные');
   const clubTab = prices.tab('#teen-prices', 'С Клубной картой');
