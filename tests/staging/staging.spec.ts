@@ -10,7 +10,7 @@ import {
 
 const STAGING_ORIGIN = 'https://staging.zvenfit.ru';
 
-test.describe.configure({ mode: 'serial' });
+test.describe.configure({ mode: 'default' });
 
 test.beforeEach(async ({ page }) => {
   await blockNonEssentialResources(page, STAGING_ORIGIN, {
@@ -19,6 +19,19 @@ test.beforeEach(async ({ page }) => {
     allowRuntimeResources: true,
   });
 });
+
+async function restrictToStagingDocuments(page: Page): Promise<void> {
+  await page.route('**/*', route => {
+    const request = route.request();
+    const requestUrl = new URL(request.url());
+
+    if (request.resourceType() === 'document' && requestUrl.origin === STAGING_ORIGIN) {
+      return route.fallback();
+    }
+
+    return route.abort('blockedbyclient');
+  });
+}
 
 async function expectStagingLocation(page: Page, pathname: string) {
   const currentUrl = new URL(page.url());
@@ -81,11 +94,13 @@ test('serves the club card from the self-training entry point', async ({ page })
 });
 
 test('serves the updated training price matrices', async ({ page }) => {
+  await restrictToStagingDocuments(page);
   await expectTabbedTrainingPrices(page);
   await expectStandaloneReformerPrices(page);
 });
 
 test('serves the updated trial and reformer offers', async ({ page }) => {
+  await restrictToStagingDocuments(page);
   await expectTrainingPriceCopy(page);
 });
 
