@@ -1,6 +1,12 @@
 import { expect, test, type Page } from '@playwright/test';
 
 import { blockNonEssentialResources } from '../support/network';
+import {
+  expectStandaloneReformerPrices,
+  expectTabbedTrainingPrices,
+  expectTeenPriceTabs,
+  expectTrainingPriceCopy,
+} from '../support/training-price-contracts';
 
 const STAGING_ORIGIN = 'https://staging.zvenfit.ru';
 
@@ -72,6 +78,19 @@ test('serves the club card from the self-training entry point', async ({ page })
   await expect(page.getByRole('heading', { level: 1, name: 'Клубная карта' })).toBeVisible();
   await expect(page.locator('.club-card-price')).toHaveCount(6);
   await expect(page.locator('meta[name="robots"]')).toHaveAttribute('content', /noindex/i);
+});
+
+test('serves the updated training price matrices', async ({ page }) => {
+  await expectTabbedTrainingPrices(page);
+  await expectStandaloneReformerPrices(page);
+});
+
+test('serves the updated trial and reformer offers', async ({ page }) => {
+  await expectTrainingPriceCopy(page);
+});
+
+test('switches the teenage standard and club-card prices', async ({ page }) => {
+  await expectTeenPriceTabs(page);
 });
 
 test('blocks an invalid lead in the browser without calling the API', async ({ page }) => {
