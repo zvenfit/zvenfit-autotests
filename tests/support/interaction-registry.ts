@@ -11,6 +11,7 @@ export const interactionKinds = [
   'reviews-carousel',
   'horizontal-accordion',
   'coaches-toggle',
+  'schedule-week-nav',
 ] as const;
 
 export type InteractionKind = (typeof interactionKinds)[number];
@@ -73,6 +74,10 @@ export function classifyInteraction(item: InteractionSnapshot): ClassifiedIntera
     kind = 'reviews-carousel';
   } else if (hasClass('accordion_horizontal-component')) {
     kind = 'horizontal-accordion';
+  } else if (hasClass('schedule-week__nav')) {
+    // Стрелки недели расписания: скелет рисует их выключенными до ответа API,
+    // поэтому реестр видит их и с заблокированным API.
+    kind = 'schedule-week-nav';
   }
 
   return { ...item, kind };
@@ -88,4 +93,5 @@ export const behaviorCoverage: Record<Exclude<InteractionKind, 'external-navigat
   'reviews-carousel': 'tests/features/ui-controls.spec.ts',
   'horizontal-accordion': 'tests/features/ui-controls.spec.ts',
   'coaches-toggle': 'tests/contracts/current-product.spec.ts',
+  'schedule-week-nav': 'tests/features/schedule.spec.ts',
 };

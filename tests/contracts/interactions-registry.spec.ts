@@ -20,6 +20,7 @@ test.describe('Реестр всех интерактивных элементо
         'lead-submit',
         'mobile-menu',
         'reviews-carousel',
+        'schedule-week-nav',
         'webflow-slider',
       ].sort(),
     );
