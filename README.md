@@ -71,13 +71,21 @@ Staging suite нельзя перенаправить на другой origin: 
 только точный `https://staging.zvenfit.ru` и требует
 `STAGING_BASIC_AUTH_USERNAME`/`STAGING_BASIC_AUTH_PASSWORD`.
 
+Браузер ходит на staging через локальный CONNECT-прокси
+(`scripts/connect-retry-proxy.ts`, конфиг поднимает его как `webServer`): если
+TCP handshake к origin не отвечен за 2,5 с, прокси перенабирает соединение
+новым сокетом, до 8 попыток. TLS сквозной, прокси туннелирует только
+`staging.zvenfit.ru:443`, число повторов видно в логе прогона.
+`STAGING_CONNECT_RETRY=0` отключает прокси, `STAGING_PROXY_PORT` меняет порт
+(по умолчанию 43989).
+
 Полный `npm test` предназначен для локального frontend: только feature-тесты формы выполняют submit, и их API всегда подменён через `page.route()`.
 
 ## Структура
 
 ```text
 pages/                 page objects и устойчивые локаторы
-scripts/               локальный read-only static server
+scripts/               локальный static server и CONNECT-прокси для staging
 tests/contracts/       все sitemap-страницы, SEO и продуктовые блоки
 tests/journeys/        read-only пользовательские переходы
 tests/features/        форма и расписание с локальными API mocks

@@ -24,6 +24,13 @@ if (!username || !password) {
 
 const isCI = Boolean(process.env.CI);
 
+// Staging sits behind a shared cloud ingress that may drop TCP handshakes. The
+// browser reaches it through a local CONNECT proxy that re-dials the origin on
+// a fresh socket (scripts/connect-retry-proxy.ts); TLS stays end-to-end.
+// STAGING_CONNECT_RETRY=0 switches the tunnel off.
+const connectRetryEnabled = process.env.STAGING_CONNECT_RETRY !== '0';
+const proxyPort = Number(process.env.STAGING_PROXY_PORT ?? '43989');
+
 export default defineConfig({
   testDir: './tests/staging',
   fullyParallel: false,
@@ -48,6 +55,7 @@ export default defineConfig({
     trace: 'off',
     screenshot: 'off',
     video: 'off',
+    proxy: connectRetryEnabled ? { server: `http://127.0.0.1:${proxyPort}` } : undefined,
   },
   projects: [
     {
@@ -55,4 +63,18 @@ export default defineConfig({
       use: { ...devices['Desktop Chrome'] },
     },
   ],
+  webServer: connectRetryEnabled
+    ? {
+        command: 'npm run serve:staging-proxy',
+        port: proxyPort,
+        reuseExistingServer: false,
+        timeout: 15_000,
+        stdout: 'pipe',
+        stderr: 'pipe',
+        env: {
+          STAGING_PROXY_PORT: String(proxyPort),
+          STAGING_PROXY_ALLOWED_HOST: baseUrl.hostname,
+        },
+      }
+    : undefined,
 });
