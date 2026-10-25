@@ -6,6 +6,7 @@ export class ApplicationPage {
   readonly contactMethod: Locator;
   readonly telegramUsername: Locator;
   readonly submit: Locator;
+  readonly submitting: Locator;
   readonly success: Locator;
   readonly error: Locator;
 
@@ -15,6 +16,7 @@ export class ApplicationPage {
     this.contactMethod = page.getByLabel('Как с вами связаться?');
     this.telegramUsername = page.getByLabel('Ваш username в Telegram');
     this.submit = page.getByRole('button', { name: 'Отправить' });
+    this.submitting = page.getByRole('button', { name: 'Отправляем...' });
     this.success = page.locator('#tg-send .success-message');
     this.error = page.locator('#tg-send .error-message');
   }
