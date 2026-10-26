@@ -71,13 +71,30 @@ Staging suite нельзя перенаправить на другой origin: 
 только точный `https://staging.zvenfit.ru` и требует
 `STAGING_BASIC_AUTH_USERNAME`/`STAGING_BASIC_AUTH_PASSWORD`.
 
+Браузер и проверка 401 ходят на staging через локальный CONNECT-прокси
+(`scripts/connect-retry-proxy.ts`, конфиг поднимает его как `webServer`): если
+TCP handshake к origin не отвечен за 1 с, прокси перенабирает соединение
+новым сокетом, до 15 попыток. TLS сквозной, прокси туннелирует только точный
+authority `staging.zvenfit.ru:443`, число попыток и время набора видны в логе
+прогона. Разрешённые ресурсы с `storage.yandexcloud.net` и `fonts.bunny.net`
+(список в `tests/support/network.ts`) идут мимо прокси напрямую: они не за
+проблемным ingress, а туннель их не пропустил бы.
+
+| Переменная | По умолчанию | Назначение |
+| --- | --- | --- |
+| `STAGING_CONNECT_RETRY` | `1` | `0` отключает прокси и возвращает прямые соединения |
+| `STAGING_PROXY_PORT` | `43989` | порт прокси на 127.0.0.1 |
+| `STAGING_PROXY_ALLOWED_HOST` | `staging.zvenfit.ru` | единственный хост, который туннелируется (порт всегда 443) |
+| `STAGING_PROXY_ATTEMPTS` | `15` | попыток TCP-соединения на один туннель (1–20) |
+| `STAGING_PROXY_CONNECT_TIMEOUT_MS` | `1000` | ожидание handshake на одну попытку (100–30000) |
+
 Полный `npm test` предназначен для локального frontend: только feature-тесты формы выполняют submit, и их API всегда подменён через `page.route()`.
 
 ## Структура
 
 ```text
 pages/                 page objects и устойчивые локаторы
-scripts/               локальный read-only static server
+scripts/               локальный static server и CONNECT-прокси для staging
 tests/contracts/       все sitemap-страницы, SEO и продуктовые блоки
 tests/journeys/        read-only пользовательские переходы
 tests/features/        форма и расписание с локальными API mocks

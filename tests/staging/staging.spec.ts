@@ -1,4 +1,4 @@
-import { expect, test, type Page } from '@playwright/test';
+import { expect, request, test, type Page } from '@playwright/test';
 
 import { blockNonEssentialResources } from '../support/network';
 import {
@@ -40,16 +40,23 @@ async function expectStagingLocation(page: Page, pathname: string) {
 }
 
 test('rejects unauthenticated access at the gateway', async () => {
-  const response = await fetch(`${STAGING_ORIGIN}/`, {
-    redirect: 'manual',
-    headers: {
+  // Same route as the browser (through the connect-retrying proxy when it is
+  // enabled), but without the suite's credentials.
+  const api = await request.newContext({
+    proxy: test.info().project.use.proxy,
+    userAgent: 'ZvenFit-Playwright-Staging/1.0',
+    extraHTTPHeaders: {
       'Cache-Control': 'no-store',
-      'User-Agent': 'ZvenFit-Playwright-Staging/1.0',
       'X-Zvenfit-Test-Run': 'playwright-staging-read-only',
     },
   });
 
-  expect(response.status).toBe(401);
+  try {
+    const response = await api.get(`${STAGING_ORIGIN}/`, { maxRedirects: 0 });
+    expect(response.status()).toBe(401);
+  } finally {
+    await api.dispose();
+  }
 });
 
 test('serves an authenticated noindex build without production analytics', async ({ page }) => {
