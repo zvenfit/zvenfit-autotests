@@ -104,6 +104,39 @@ test.describe('Форма заявки с полностью локальным 
     expect(payloads[1].submission_id).toBe(payloads[0].submission_id);
   });
 
+  test('держит кнопку заблокированной и не показывает ошибку, пока запрос в полёте', async ({ page }) => {
+    let releaseResponse = () => {};
+    const responseHeld = new Promise<void>(resolve => {
+      releaseResponse = resolve;
+    });
+    let apiCalls = 0;
+    await page.route('https://api.local.test/lead', async route => {
+      apiCalls += 1;
+      await responseHeld;
+      await fulfillJson(route, 200, { ok: true });
+    });
+
+    const application = new ApplicationPage(page);
+    await application.open();
+    // The Webflow runtime's delegated submit handler is what this test guards against:
+    // without it every assertion below passes even on the broken form.
+    await application.waitForWebflowRuntime();
+    await application.fill();
+    await application.submit.click();
+
+    await expect(application.submitting).toBeVisible();
+    await expect(application.submitting).toBeDisabled();
+    await expect(application.error).toBeHidden();
+    await expect(application.success).toBeHidden();
+
+    await application.phone.press('Enter');
+    await expect(application.submitting).toBeDisabled();
+
+    releaseResponse();
+    await expect(application.success).toContainText('Спасибо! Ваша заявка получена!');
+    expect(apiCalls).toBe(1);
+  });
+
   test('показывает отдельное сообщение при rate limit', async ({ page }) => {
     await page.route('https://api.local.test/lead', route =>
       fulfillJson(route, 429, { ok: false, error: 'rate_limited' }),
