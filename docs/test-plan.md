@@ -19,7 +19,7 @@
 | Тренеры | все профили из sitemap, основной контент, CTA записи и переход из каталога | contract + journey |
 | Заявка | native validation и условная обязательность Telegram username | functional, mocked API |
 | Заявка | payload, UUID, UTM, повтор с тем же `submission_id`, HTTP 429 | functional, mocked API |
-| Расписание | двухнедельный API-запрос, фильтры типа/клуба/зала, пустая неделя | functional, mocked API |
+| Расписание | двухнедельный API-запрос, фильтры типа/клуба/зала, пустая неделя и возврат стрелками недель без повторного запроса | functional, mocked API |
 | Расписание | dialog с клавиатуры, HTML sanitization, HTTP и invalid-payload ошибки | functional, mocked API |
 | Production | все sitemap-контракты, продуктовые блоки, переходы и runtime API config | read-only |
 | Staging | Basic Auth boundary, `noindex`, отсутствие production analytics, synthetic schedule и native lead validation без API request | authenticated read-only |

@@ -76,7 +76,7 @@ test.describe('Расписание с полностью локальным API
     await expect(dialog).toBeHidden();
   });
 
-  test('показывает пустую следующую неделю без повторного запроса API', async ({ page }) => {
+  test('листает на пустую следующую неделю и обратно без повторного запроса API', async ({ page }) => {
     let calls = 0;
     await page.route('https://api.local.test/schedule?**', route => {
       calls += 1;
@@ -88,6 +88,11 @@ test.describe('Расписание с полностью локальным API
     await page.getByRole('button', { name: 'Следующая неделя' }).click();
 
     await expect(page.getByText('На этой неделе занятий нет')).toBeVisible();
+    expect(calls).toBe(1);
+
+    await page.getByRole('button', { name: 'Предыдущая неделя' }).click();
+
+    await expect(schedule.event('Пилатес на реформере')).toBeVisible();
     expect(calls).toBe(1);
   });
 

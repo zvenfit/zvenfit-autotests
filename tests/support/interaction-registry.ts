@@ -75,8 +75,8 @@ export function classifyInteraction(item: InteractionSnapshot): ClassifiedIntera
   } else if (hasClass('accordion_horizontal-component')) {
     kind = 'horizontal-accordion';
   } else if (hasClass('schedule-week__nav')) {
-    // Стрелки недели расписания: скелет рисует их выключенными до ответа API,
-    // поэтому реестр видит их и с заблокированным API.
+    // Schedule week arrows: the loading skeleton renders them disabled before the API
+    // answers, so the registry sees them even with the API blocked.
     kind = 'schedule-week-nav';
   }
 
