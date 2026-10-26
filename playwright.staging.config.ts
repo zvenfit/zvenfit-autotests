@@ -1,4 +1,5 @@
 import { defineConfig, devices } from '@playwright/test';
+import { directResourceHosts } from './tests/support/network';
 
 const EXPECTED_ORIGIN = 'https://staging.zvenfit.ru';
 const requestedBaseUrl = process.env.PLAYWRIGHT_BASE_URL ?? EXPECTED_ORIGIN;
@@ -31,6 +32,10 @@ const isCI = Boolean(process.env.CI);
 const connectRetryEnabled = process.env.STAGING_CONNECT_RETRY !== '0';
 const proxyPort = Number(process.env.STAGING_PROXY_PORT ?? '43989');
 
+if (!Number.isInteger(proxyPort) || proxyPort < 1024 || proxyPort > 65_535) {
+  throw new Error('STAGING_PROXY_PORT must be an integer between 1024 and 65535');
+}
+
 export default defineConfig({
   testDir: './tests/staging',
   fullyParallel: false,
@@ -55,7 +60,14 @@ export default defineConfig({
     trace: 'off',
     screenshot: 'off',
     video: 'off',
-    proxy: connectRetryEnabled ? { server: `http://127.0.0.1:${proxyPort}` } : undefined,
+    proxy: connectRetryEnabled
+      ? {
+          server: `http://127.0.0.1:${proxyPort}`,
+          // Object Storage and the font CDN sit outside the broken ingress and the
+          // tunnel refuses every host but staging, so these are fetched directly.
+          bypass: directResourceHosts.join(','),
+        }
+      : undefined,
   },
   projects: [
     {

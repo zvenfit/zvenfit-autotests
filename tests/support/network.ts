@@ -9,6 +9,12 @@ const runtimeResourcePrefixes = [
   'https://storage.yandexcloud.net/zvenfit/v2/js/',
 ] as const;
 
+// Hosts the suite deliberately lets the browser reach when layout or runtime
+// resources are allowed. The staging config sends them past its CONNECT proxy.
+export const directResourceHosts = [
+  ...new Set([...layoutResourcePrefixes, ...runtimeResourcePrefixes].map(prefix => new URL(prefix).hostname)),
+];
+
 type NetworkOptions = {
   allowExternalDocuments?: boolean;
   allowLayoutResources?: boolean;
