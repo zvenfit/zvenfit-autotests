@@ -41,9 +41,12 @@ async function expectStagingLocation(page: Page, pathname: string) {
 
 test('rejects unauthenticated access at the gateway', async () => {
   // Same route as the browser (through the connect-retrying proxy when it is
-  // enabled), but without the suite's credentials.
+  // enabled), but without the suite's credentials. Inside the runner a standalone
+  // request context inherits the project's `use` options, including
+  // `httpCredentials`, and would answer the Basic auth challenge on its own.
   const api = await request.newContext({
     proxy: test.info().project.use.proxy,
+    httpCredentials: undefined,
     userAgent: 'ZvenFit-Playwright-Staging/1.0',
     extraHTTPHeaders: {
       'Cache-Control': 'no-store',
