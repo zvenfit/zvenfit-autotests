@@ -17,7 +17,7 @@
 | Контакты | две карточки Яндекс Карт, Telegram, WhatsApp, App Store, RuStore и APK | product contract |
 | Приложение | оффер 15%, условия акции и три download-ссылки | product contract |
 | Тренеры | все профили из sitemap, основной контент, CTA записи и переход из каталога | contract + journey |
-| Заявка | native validation и условная обязательность Telegram username | functional, mocked API |
+| Заявка | native validation, условная обязательность Telegram username, состояние отправки: кнопка заблокирована, ошибки нет, Enter не дублирует запрос | functional, mocked API |
 | Заявка | payload, UUID, UTM, повтор с тем же `submission_id`, HTTP 429 | functional, mocked API |
 | Расписание | двухнедельный API-запрос, фильтры типа/клуба/зала, пустая неделя | functional, mocked API |
 | Расписание | dialog с клавиатуры, HTML sanitization, HTTP и invalid-payload ошибки | functional, mocked API |

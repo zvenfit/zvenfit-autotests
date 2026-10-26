@@ -27,6 +27,16 @@ export class ApplicationPage {
     await expect(this.name).toBeVisible();
   }
 
+  async waitForWebflowRuntime(): Promise<void> {
+    await expect
+      .poll(() =>
+        this.page.evaluate(
+          () => typeof (window as Window & { Webflow?: { require?: unknown } }).Webflow?.require,
+        ),
+      )
+      .toBe('function');
+  }
+
   async fill(values: {
     name?: string;
     phone?: string;

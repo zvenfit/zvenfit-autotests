@@ -118,6 +118,9 @@ test.describe('Форма заявки с полностью локальным 
 
     const application = new ApplicationPage(page);
     await application.open();
+    // The Webflow runtime's delegated submit handler is what this test guards against:
+    // without it every assertion below passes even on the broken form.
+    await application.waitForWebflowRuntime();
     await application.fill();
     await application.submit.click();
 
@@ -127,7 +130,7 @@ test.describe('Форма заявки с полностью локальным 
     await expect(application.success).toBeHidden();
 
     await application.phone.press('Enter');
-    expect(apiCalls).toBe(1);
+    await expect(application.submitting).toBeDisabled();
 
     releaseResponse();
     await expect(application.success).toContainText('Спасибо! Ваша заявка получена!');
