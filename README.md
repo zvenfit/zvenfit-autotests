@@ -39,7 +39,9 @@ npm run report        # открыть последний HTML-отчёт
 
 GitHub Actions использует два checkout: текущий `zvenfit-autotests` и
 `zvenfit-frontend/main`. Frontend собирается в development-режиме, после чего
-запускаются TypeScript и весь локальный Playwright suite.
+запускаются TypeScript и весь локальный Playwright suite. Workflow, которые
+собирают frontend, берут последний патч Node 22 (`check-latest`): сборке нужен
+свежий 22.x, а в кэше раннера он может быть старше.
 
 - **Playwright quality** — на каждый PR и push в `master`;
 - **Production read-only smoke** — ежедневно и вручную, только

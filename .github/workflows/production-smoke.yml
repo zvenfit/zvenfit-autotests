@@ -40,6 +40,9 @@ jobs:
         uses: actions/setup-node@249970729cb0ef3589644e2896645e5dc5ba9c38 # v6
         with:
           node-version: '22'
+          # The frontend build needs a recent Node 22 patch; the runner's
+          # cached 22.x may be older.
+          check-latest: true
           cache: npm
           cache-dependency-path: |
             zvenfit-autotests/package-lock.json
