@@ -39,7 +39,9 @@ npm run report        # открыть последний HTML-отчёт
 
 GitHub Actions использует два checkout: текущий `zvenfit-autotests` и
 `zvenfit-frontend/main`. Frontend собирается в development-режиме, после чего
-запускаются TypeScript и весь локальный Playwright suite.
+запускаются TypeScript и весь локальный Playwright suite. Workflow, которые
+собирают frontend, берут последний патч Node 22 (`check-latest`): сборке нужен
+свежий 22.x, а в кэше раннера он может быть старше.
 
 - **Playwright quality** — на каждый PR и push в `master`;
 - **Production read-only smoke** — ежедневно и вручную, только
@@ -76,9 +78,11 @@ Staging suite нельзя перенаправить на другой origin: 
 TCP handshake к origin не отвечен за 1 с, прокси перенабирает соединение
 новым сокетом, до 15 попыток. TLS сквозной, прокси туннелирует только точный
 authority `staging.zvenfit.ru:443`, число попыток и время набора видны в логе
-прогона. Разрешённые ресурсы с `storage.yandexcloud.net` и `fonts.bunny.net`
-(список в `tests/support/network.ts`) идут мимо прокси напрямую: они не за
-проблемным ingress, а туннель их не пропустил бы.
+прогона. Разрешённые ресурсы с `storage.yandexcloud.net`, `fonts.bunny.net` и
+`cdn.jsdelivr.net` (список в `tests/support/network.ts`) идут мимо прокси
+напрямую: они не за проблемным ingress, а туннель их не пропустил бы. С
+`cdn.jsdelivr.net` разрешены только файлы шрифтов из `/fontsource/fonts/`: на
+них ссылается таблица стилей Bunny Fonts.
 
 | Переменная | По умолчанию | Назначение |
 | --- | --- | --- |

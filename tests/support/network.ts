@@ -4,6 +4,10 @@ const layoutResourcePrefixes = [
   'https://storage.yandexcloud.net/zvenfit/v2/css/',
   'https://storage.yandexcloud.net/zvenfit/v2/fonts/',
   'https://fonts.bunny.net/',
+  // The Bunny Fonts stylesheet now points every Roboto and Roboto Condensed
+  // file at the Fontsource packages on jsDelivr. Without them the fallback
+  // font is wider and the layout contracts measure a page visitors never see.
+  'https://cdn.jsdelivr.net/fontsource/fonts/',
 ] as const;
 const runtimeResourcePrefixes = [
   'https://storage.yandexcloud.net/zvenfit/v2/js/',
